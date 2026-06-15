@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "todoist-age-injection",
+  "version": "1.0.0",
+  "description": "Shows the age of each Todoist task as a compact \"Nd\" label in the task list.",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://todoist.com/*",
+    "https://api.todoist.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://todoist.com/*"],
+      "js": ["core.js", "inject.js", "content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["injected.js"],
+      "matches": ["https://todoist.com/*"]
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_page": "options.html",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "todoist-age-injection"
+  }
+}

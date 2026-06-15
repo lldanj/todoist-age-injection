@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>todoist-age-injection — options</title>
+    <style>
+      :root {
+        --ink: #1a1c1e;
+        --muted: #6b7075;
+        --line: #e3e5e8;
+        --field: #f6f7f8;
+        --accent: #c0392b; /* Todoist's red lineage, dialed to a deeper brick */
+        --ok: #1e7e45;
+        --warn: #b3261e;
+        --mono: ui-monospace, "SF Mono", "Roboto Mono", Menlo, Consolas, monospace;
+        --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: var(--sans);
+        color: var(--ink);
+        background: #fff;
+        line-height: 1.5;
+      }
+      .wrap { max-width: 520px; margin: 0 auto; padding: 40px 28px 56px; }
+      .eyebrow {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin: 0 0 6px;
+      }
+      h1 {
+        font-size: 22px;
+        margin: 0 0 4px;
+        letter-spacing: -0.01em;
+      }
+      .sub { color: var(--muted); font-size: 14px; margin: 0 0 32px; }
+      label {
+        display: block;
+        font-weight: 600;
+        font-size: 13px;
+        margin: 0 0 8px;
+      }
+      .field-row { display: flex; gap: 8px; }
+      input[type="password"], input[type="text"] {
+        flex: 1;
+        font-family: var(--mono);
+        font-size: 13px;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--field);
+        color: var(--ink);
+      }
+      input:focus {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px;
+        background: #fff;
+      }
+      button {
+        font-family: var(--sans);
+        font-size: 13px;
+        font-weight: 600;
+        padding: 10px 16px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--ink);
+        cursor: pointer;
+        transition: background-color 120ms ease, border-color 120ms ease;
+      }
+      button:hover { background: var(--field); }
+      button.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+      button.primary:hover { background: #a93226; }
+      button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      .toggle {
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--muted);
+        background: none;
+        border: none;
+        padding: 4px 0;
+        cursor: pointer;
+        text-decoration: underline;
+      }
+      .actions { display: flex; gap: 8px; margin-top: 16px; }
+      .status {
+        margin-top: 18px;
+        font-size: 13px;
+        min-height: 20px;
+        font-family: var(--mono);
+      }
+      .status.ok { color: var(--ok); }
+      .status.err { color: var(--warn); }
+      .help {
+        margin-top: 36px;
+        padding-top: 24px;
+        border-top: 1px solid var(--line);
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .help a { color: var(--accent); }
+      .help code {
+        font-family: var(--mono);
+        font-size: 12px;
+        background: var(--field);
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
+      .sample {
+        display: inline-block;
+        font-family: var(--mono);
+        font-size: 11px;
+        color: #9aa0a6;
+        border: 1px dashed var(--line);
+        border-radius: 4px;
+        padding: 1px 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <p class="eyebrow">todoist-age-injection</p>
+      <h1>Task age in your task list</h1>
+      <p class="sub">
+        Adds a small <span class="sample">42d</span> readout to each task,
+        counting whole days since it was created.
+      </p>
+
+      <label for="token">Todoist API token</label>
+      <div class="field-row">
+        <input
+          id="token"
+          type="password"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="Paste your token"
+        />
+        <button id="reveal" class="toggle" title="Show or hide">Show</button>
+      </div>
+
+      <div class="actions">
+        <button id="save" class="primary">Save token</button>
+        <button id="test">Test connection</button>
+        <button id="clear">Remove</button>
+      </div>
+
+      <div id="status" class="status" role="status" aria-live="polite"></div>
+
+      <div class="help">
+        <p>
+          Find your token in Todoist under
+          <strong>Settings → Integrations → Developer</strong>, in the
+          <strong>API token</strong> section, or open
+          <a
+            href="https://app.todoist.com/app/settings/integrations/developer"
+            target="_blank"
+            rel="noopener"
+            >Developer settings</a
+          >.
+        </p>
+        <p>
+          Your token is stored only in this browser
+          (<code>chrome.storage.local</code>) and is sent only to
+          <code>api.todoist.com</code>.
+        </p>
+      </div>
+    </div>
+    <script src="core.js"></script>
+    <script src="options.js"></script>
+  </body>
+</html>

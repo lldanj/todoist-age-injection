@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      :root {
+        --ink: #1a1c1e;
+        --muted: #6b7075;
+        --accent: #c0392b;
+        --mono: ui-monospace, "SF Mono", "Roboto Mono", Menlo, Consolas, monospace;
+        --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }
+      body {
+        width: 260px;
+        margin: 0;
+        padding: 16px;
+        font-family: var(--sans);
+        color: var(--ink);
+      }
+      .row { display: flex; align-items: baseline; gap: 8px; }
+      .name { font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em; }
+      .chip {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: #9aa0a6;
+        border: 1px dashed #e3e5e8;
+        border-radius: 4px;
+        padding: 0 5px;
+      }
+      #state { font-size: 13px; margin: 12px 0 14px; color: var(--muted); }
+      #state.ok { color: #1e7e45; }
+      #state.warn { color: #b3261e; }
+      button {
+        width: 100%;
+        font-family: var(--sans);
+        font-size: 13px;
+        font-weight: 600;
+        padding: 9px 12px;
+        border: 1px solid var(--accent);
+        border-radius: 8px;
+        background: var(--accent);
+        color: #fff;
+        cursor: pointer;
+      }
+      button:hover { background: #a93226; }
+    </style>
+  </head>
+  <body>
+    <div class="row">
+      <span class="name">todoist-age-injection</span>
+      <span class="chip">42d</span>
+    </div>
+    <p id="state">Checking status…</p>
+    <button id="open">Open options</button>
+    <script src="popup.js"></script>
+  </body>
+</html>
