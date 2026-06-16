@@ -1,11 +1,6 @@
 # todoist-age-injection
 
-A Chrome/Brave (Manifest V3) extension that adds task age (**x days**) for
-each task in the Todoist web app, showing how many whole days ago the task was
-created. Built strictly to the project PRD.
-
-A task created today shows `0d`; a task created six weeks ago shows `42d`.
-Hover the label for the full date: *"Created 42 days ago (Dec 11, 2019)."*
+Ever look at a task in Todoist and wonder how long it's been sitting there? This extension answers that question automatically. It adds a small **"Task age: Nd"** label to every task showing how many days old it is — right in your task lists, and also in the detail panel when you open a task. Hover any label to see the exact date the task was created. No setup beyond pasting your Todoist API token once.
 
 ---
 
@@ -29,14 +24,22 @@ Use **Test connection** on the options page to confirm it works.
 
 ---
 
+## What you'll see
+
+**In list views** — every task row shows a compact **"Task age: Nd"** label (e.g. `Task age: 23d`). Hover it for the exact creation date: *"Created on 12/11/2019"*.
+
+**In the task detail panel** — when you open a single task, a **"Task age: Nd"** line appears at the bottom of the properties sidebar (below Location), with the same hover tooltip.
+
+A task created today shows `Task age: 0d`. Ages update as you switch views or add tasks — no page reload needed.
+
+---
+
 ## How it works
 
-- On `todoist.com`, the extension fetches your active tasks once per page load
-  from the Todoist unified API v1 (`GET /api/v1/tasks`, paginated via
-  `next_cursor`), reading each task's `added_at` timestamp.
-- It watches the page for task rows (Todoist is a single-page app) and injects
-  an age label into each one, updating as you switch views or add tasks.
+- On page load the extension fetches all your active tasks from the Todoist API (`GET /api/v1/tasks`), reading each task's creation timestamp.
+- It watches the page for new task rows and injects age labels automatically as you navigate.
 - Age is computed in your local timezone as whole elapsed days.
+- The detail panel label is detected by DOM structure, so it works regardless of which view you open a task from.
 
 The extension identifies task rows by Todoist's task-ID **data attribute**, not
 by CSS class names. Todoist's class names are obfuscated and change frequently;
@@ -49,19 +52,10 @@ attribute name can be changed in one place: `TIA_ID_ATTR` at the top of
 
 ## Known limitations
 
-- **Active tasks only.** Completed tasks are not shown by Todoist in normal list
-  views, so they get no label.
-- **List views.** Ages are designed for list views. Board (kanban) and Calendar
-  views use a different layout; labels may not appear there.
-- **One API call per page load.** For typical personal accounts (well under
-  1,000 tasks) the REST endpoint returns everything in a single response. Very
-  large accounts that exceed the API's single-response set may not have every
-  task labeled.
-- **Newly created tasks.** A task you just created shows its label a moment
-  later, once Todoist confirms it with the server (it briefly has a temporary
-  ID that can't be looked up).
-- **Shared projects.** A task visible in the UI but not returned by your token's
-  API view (e.g. some shared-project cases) is skipped silently.
+- **Active tasks only.** Completed tasks are not shown in normal list views, so they get no label.
+- **List views.** Ages are designed for list views. Board (kanban) and Calendar views use a different layout; labels may not appear there.
+- **Newly created tasks.** A task you just created shows its label a moment later, once Todoist confirms it with the server (it briefly has a temporary ID that can't be looked up).
+- **Shared projects.** A task visible in the UI but not returned by your token's API view (e.g. some shared-project cases) is skipped silently.
 
 ---
 
@@ -90,27 +84,10 @@ the Console for `[todoist-age-injection]` messages.
 |------|------|
 | `manifest.json` | MV3 manifest |
 | `core.js` | Pure logic: age math, formatting, ID parsing, cache, debounce |
-| `inject.js` | DOM logic: find task rows, inject/remove labels, notices |
+| `inject.js` | DOM logic: find task rows, inject/remove labels and detail panel age |
 | `content.js` | Browser integration: token, fetch, observer, lifecycle |
 | `injected.js` | MAIN-world hook for SPA navigation events |
 | `background.js` | Minimal service worker (first-run hint) |
 | `options.html` / `options.js` | Token entry, test, remove |
 | `popup.html` / `popup.js` | Status + link to options |
 | `styles.css` | Namespaced label and banner styles |
-
-## Tests
-
-The logic and integration layers have an automated test suite (72 tests) run
-with Node + jsdom:
-
-```
-npm install jsdom
-node test.js            # core + DOM injection (48)
-node test-extended.js   # adversarial / real-user scenarios (13)
-node test-integration.js# content.js wired to mocked chrome/fetch (11)
-```
-
-> Note: these tests cover all logic that can be verified without a live browser
-> session. Because the extension runs against the real, logged-in Todoist DOM,
-> the final selector check (confirming the task-ID attribute name in DevTools)
-> must be done in your own browser — it cannot be automated here.
