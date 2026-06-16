@@ -33,7 +33,7 @@
   const NOTICE_MSG =
     "todoist-age-injection: Add your API token in extension options to see task ages.";
 
-  // In-memory cache: Map<taskId, created_at>. Lives for the tab session.
+  // In-memory cache: Map<taskId, added_at>. Lives for the tab session.
   let cache = new Map();
   let tokenPresent = false;
   let observer = null;
@@ -73,28 +73,38 @@
   /* ------------------------------ fetching ------------------------------- */
 
   async function fetchTasks(token) {
-    const url = "https://api.todoist.com/rest/v2/tasks";
-    const res = await fetch(url, {
-      headers: { Authorization: "Bearer " + token },
-    });
-    if (res.status === 401) {
-      const err = new Error("unauthorized");
-      err.code = 401;
-      throw err;
-    }
-    if (res.status === 429) {
-      const retry = parseInt(res.headers.get("Retry-After") || "60", 10);
-      const err = new Error("rate-limited");
-      err.code = 429;
-      err.retryAfter = isNaN(retry) ? 60 : retry;
-      throw err;
-    }
-    if (!res.ok) {
-      const err = new Error("http-" + res.status);
-      err.code = res.status;
-      throw err;
-    }
-    return res.json();
+    const base = "https://api.todoist.com/api/v1/tasks";
+    const tasks = [];
+    let cursor = null;
+    do {
+      const url = cursor ? base + "?cursor=" + encodeURIComponent(cursor) : base;
+      const res = await fetch(url, {
+        headers: { Authorization: "Bearer " + token },
+      });
+      if (res.status === 401) {
+        const err = new Error("unauthorized");
+        err.code = 401;
+        throw err;
+      }
+      if (res.status === 429) {
+        const retry = parseInt(res.headers.get("Retry-After") || "60", 10);
+        const err = new Error("rate-limited");
+        err.code = 429;
+        err.retryAfter = isNaN(retry) ? 60 : retry;
+        throw err;
+      }
+      if (!res.ok) {
+        const err = new Error("http-" + res.status);
+        err.code = res.status;
+        throw err;
+      }
+      const data = await res.json();
+      if (data && Array.isArray(data.results)) {
+        tasks.push.apply(tasks, data.results);
+      }
+      cursor = (data && data.next_cursor) || null;
+    } while (cursor);
+    return tasks;
   }
 
   async function loadCache(token, isRetry) {

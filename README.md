@@ -15,7 +15,7 @@ Hover the label for the full date: *"Created 42 days ago (Dec 11, 2019)."*
 2. Turn on **Developer mode** (top-right).
 3. Click **Load unpacked** and select this folder.
 4. Click the extension's icon → **Open options**, and paste your Todoist API token.
-5. Open or refresh [todoist.com](https://todoist.com). Ages appear next to your tasks.
+5. Open or refresh [app.todoist.com](https://app.todoist.com). Ages appear next to your tasks.
 
 ## Getting your Todoist API token
 
@@ -32,8 +32,8 @@ Use **Test connection** on the options page to confirm it works.
 ## How it works
 
 - On `todoist.com`, the extension fetches your active tasks once per page load
-  from the Todoist REST API v2 (`GET /rest/v2/tasks`), reading each task's
-  `created_at` timestamp.
+  from the Todoist unified API v1 (`GET /api/v1/tasks`, paginated via
+  `next_cursor`), reading each task's `added_at` timestamp.
 - It watches the page for task rows (Todoist is a single-page app) and injects
   an age label into each one, updating as you switch views or add tasks.
 - Age is computed in your local timezone as whole elapsed days.
@@ -79,7 +79,7 @@ Your token is wrong or was revoked. Re-copy it from Todoist's Developer settings
 and save again.
 
 **Nothing happens and there's no banner.**
-Confirm the extension is enabled and that you're on `https://todoist.com`. Check
+Confirm the extension is enabled and that you're on `https://app.todoist.com`. Check
 the Console for `[todoist-age-injection]` messages.
 
 ---

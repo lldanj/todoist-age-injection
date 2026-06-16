@@ -66,7 +66,7 @@
     }
     setStatus("Testing…", null);
     try {
-      const res = await fetch("https://api.todoist.com/rest/v2/tasks", {
+      const res = await fetch("https://api.todoist.com/api/v1/tasks", {
         headers: { Authorization: "Bearer " + token },
       });
       if (res.status === 401) {
@@ -81,9 +81,11 @@
         setStatus("Unexpected response: HTTP " + res.status + ".", "err");
         return;
       }
-      const tasks = await res.json();
-      const n = Array.isArray(tasks) ? tasks.length : 0;
-      setStatus("Connected. Found " + n + " active task" + (n === 1 ? "" : "s") + ".", "ok");
+      const data = await res.json();
+      const results = data && Array.isArray(data.results) ? data.results : [];
+      const n = results.length;
+      const more = data && data.next_cursor ? "+" : "";
+      setStatus("Connected. Found " + n + more + " active task" + (n === 1 && !more ? "" : "s") + ".", "ok");
     } catch (e) {
       setStatus("Network error. Check your connection and try again.", "err");
     }

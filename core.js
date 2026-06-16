@@ -98,7 +98,7 @@
   }
 
   /**
-   * Build the Map<id, created_at> cache from a REST /tasks response array.
+   * Build the Map<id, added_at> cache from a /tasks response array.
    * Skips malformed entries defensively.
    * @param {Array<object>} tasks
    * @returns {Map<string,string>}
@@ -107,8 +107,8 @@
     const cache = new Map();
     if (!Array.isArray(tasks)) return cache;
     for (const t of tasks) {
-      if (t && t.id != null && t.created_at != null) {
-        cache.set(String(t.id), t.created_at);
+      if (t && t.id != null && t.added_at != null) {
+        cache.set(String(t.id), t.added_at);
       }
     }
     return cache;

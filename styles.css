@@ -7,7 +7,7 @@
 
 .tia-age-label {
   display: inline-block;
-  margin-left: 6px;
+  margin-left: auto;
   padding: 0 4px;
   font-family: ui-monospace, "SF Mono", "Roboto Mono", Menlo, Consolas, monospace;
   font-size: 11px;

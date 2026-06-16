@@ -116,14 +116,20 @@
    * @returns {Element} the element to appendChild the label to
    */
   function pickLabelTarget(node) {
-    // The element directly containing the task's own anchor, but NOT one that
-    // also wraps nested subtasks.
+    // Primary: insert into the title flex row (the sibling immediately before the
+    // info-tags row). This places the label right-justified above the project
+    // breadcrumb. data-testid="task-info-tags" is a stable test attribute.
+    const infoTags = node.querySelector('[data-testid="task-info-tags"]');
+    if (infoTags && infoTags.previousElementSibling) {
+      return infoTags.previousElementSibling;
+    }
+
+    // Fallback: walk up from the first task link to a container without nested tasks.
     const link = node.querySelector("a");
     if (link) {
       let container = link.parentElement;
       let hops = 0;
       while (container && container !== node && hops < 4) {
-        // Reject containers that hold a nested task list.
         if (!container.querySelector("ul, ol, [data-item-id]")) {
           return container;
         }

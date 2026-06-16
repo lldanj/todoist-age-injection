@@ -6,11 +6,12 @@
   "permissions": ["storage"],
   "host_permissions": [
     "https://todoist.com/*",
+    "https://app.todoist.com/*",
     "https://api.todoist.com/*"
   ],
   "content_scripts": [
     {
-      "matches": ["https://todoist.com/*"],
+      "matches": ["https://todoist.com/*", "https://app.todoist.com/*"],
       "js": ["core.js", "inject.js", "content.js"],
       "css": ["styles.css"],
       "run_at": "document_idle"
@@ -19,7 +20,7 @@
   "web_accessible_resources": [
     {
       "resources": ["injected.js"],
-      "matches": ["https://todoist.com/*"]
+      "matches": ["https://todoist.com/*", "https://app.todoist.com/*"]
     }
   ],
   "background": {
