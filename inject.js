@@ -53,12 +53,14 @@
     const results = [];
     const seenNodes = new Set();
 
-    // Primary: [data-item-id]
+    // Primary: [data-item-id] — list rows only (skip the detail panel, which
+    // carries the same attribute but is not inside a list item).
     const primary = doc.querySelectorAll("[" + idAttr + "]");
     for (const node of primary) {
       if (node.getAttribute(INJECTED_ATTR) === "true") continue;
       const id = node.getAttribute(idAttr);
       if (!id) continue;
+      if (!node.closest("li") && !node.closest('[role="listitem"]')) continue;
       results.push({ node: node, id: String(id) });
       seenNodes.add(node);
     }
@@ -325,8 +327,9 @@
 
     const el = doc.createElement("div");
     el.className = DETAIL_LABEL_CLASS;
-    el.textContent = desc.tooltip;
+    el.textContent = "Task age: " + desc.label;
     el.setAttribute("data-tia-task-id", id);
+    el.setAttribute("title", desc.tooltip);
     el.setAttribute("aria-label", desc.tooltip);
 
     pickDetailTarget(info.node).appendChild(el);
