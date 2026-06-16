@@ -63,6 +63,10 @@
         now: new Date(),
         idAttr: TIA_ID_ATTR,
       });
+      inject.injectDetailAge(document, cache, {
+        now: new Date(),
+        href: window.location.href,
+      });
     } catch (e) {
       console.warn(LOG + " scan error:", e);
     }

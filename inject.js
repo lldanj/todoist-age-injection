@@ -23,6 +23,7 @@
   "use strict";
 
   const LABEL_CLASS = "tia-age-label";
+  const DETAIL_LABEL_CLASS = "tia-detail-age";
   const NOTICE_CLASS = "tia-notice-banner";
   const INJECTED_ATTR = "data-tia-injected";
   const LOG = "[todoist-age-injection]";
@@ -231,6 +232,108 @@
   }
 
   /**
+   * Find the task-detail panel node and the task ID being viewed.
+   *
+   * Primary: look for a [data-item-id] element that is NOT a plain list row
+   * (i.e. not inside an <li> or [role="listitem"]).  This covers Todoist's
+   * right-side detail panel which carries the same attribute.
+   * Fallback: try known data-testid values for the detail panel.
+   *
+   * @param {Document} doc
+   * @param {object} opts  – must contain opts.href (current window.location.href)
+   * @returns {{node:Element, id:string}|null}
+   */
+  function findDetailNode(doc, opts) {
+    const core = getCore(typeof self !== "undefined" ? self : this);
+    const href = (opts && opts.href) || "";
+    const id = core.extractIdFromHref(href);
+    if (!id) return null;
+
+    // A. data-item-id match that is NOT a plain list row.
+    const candidates = doc.querySelectorAll('[data-item-id="' + id + '"]');
+    for (const el of candidates) {
+      if (!el.closest("li") && !el.closest('[role="listitem"]')) {
+        return { node: el, id: id };
+      }
+    }
+
+    // B. Known data-testid patterns Todoist uses for the detail panel.
+    const testIds = ["task-detail", "task-detail-content", "task-details", "detail-panel"];
+    for (const tid of testIds) {
+      const el = doc.querySelector('[data-testid="' + tid + '"]');
+      if (el) return { node: el, id: id };
+    }
+
+    return null;
+  }
+
+  /**
+   * Pick where inside the detail panel to place the age row.
+   * Mirrors the list-view strategy: prefer the info-tags element, then fall
+   * back to the first non-list child, then the container itself.
+   * @param {Element} node
+   * @returns {Element}
+   */
+  function pickDetailTarget(node) {
+    const infoTags = node.querySelector('[data-testid="task-info-tags"]');
+    if (infoTags) return infoTags;
+
+    for (const child of node.children) {
+      const tag = child.tagName && child.tagName.toLowerCase();
+      if (tag === "ul" || tag === "ol") continue;
+      if (child.querySelector && child.querySelector("[data-item-id]")) continue;
+      return child;
+    }
+    return node;
+  }
+
+  /**
+   * Inject (or refresh) the age label into the task detail panel.
+   *
+   * Idempotent per task ID: the label carries a data-tia-task-id attribute so
+   * we can detect a stale label (user navigated to a different task) and swap
+   * it out without duplicating work on every debounced scan.
+   *
+   * Shows the full human-readable string ("Created 42 days ago (Dec 11, 2019)")
+   * rather than the compact chip — the detail view has the space for it.
+   *
+   * @param {Document} doc
+   * @param {Map} cache
+   * @param {object} opts – {href, now}
+   * @returns {string} status for logging
+   */
+  function injectDetailAge(doc, cache, opts) {
+    const core = getCore(typeof self !== "undefined" ? self : this);
+    const href = (opts && opts.href) || "";
+    const id = core.extractIdFromHref(href);
+
+    // Remove a stale label left over from a previous task view.
+    const existing = doc.querySelector("." + DETAIL_LABEL_CLASS);
+    if (existing) {
+      if (existing.getAttribute("data-tia-task-id") === id) return "already-injected";
+      existing.parentNode && existing.parentNode.removeChild(existing);
+    }
+
+    if (!id) return "no-id";
+    if (core.isPlaceholderId(id)) return "placeholder";
+
+    const info = findDetailNode(doc, opts);
+    if (!info) return "no-panel";
+
+    const desc = core.describeTask(cache, id, opts && opts.now);
+    if (!desc) return "no-cache";
+
+    const el = doc.createElement("div");
+    el.className = DETAIL_LABEL_CLASS;
+    el.textContent = desc.tooltip;
+    el.setAttribute("data-tia-task-id", id);
+    el.setAttribute("aria-label", desc.tooltip);
+
+    pickDetailTarget(info.node).appendChild(el);
+    return "injected";
+  }
+
+  /**
    * Remove every artifact this extension added: labels, the notice banner,
    * and the sentinel attributes. Used on unload and on token (re)config.
    * @param {Document} doc
@@ -238,7 +341,7 @@
    */
   function removeAll(doc) {
     let removed = 0;
-    const labels = doc.querySelectorAll("." + LABEL_CLASS);
+    const labels = doc.querySelectorAll("." + LABEL_CLASS + ", ." + DETAIL_LABEL_CLASS);
     for (const el of labels) {
       el.parentNode && el.parentNode.removeChild(el);
       removed++;
@@ -287,11 +390,13 @@
 
   return {
     LABEL_CLASS: LABEL_CLASS,
+    DETAIL_LABEL_CLASS: DETAIL_LABEL_CLASS,
     NOTICE_CLASS: NOTICE_CLASS,
     INJECTED_ATTR: INJECTED_ATTR,
     findTaskNodes: findTaskNodes,
     injectOne: injectOne,
     scanAndInject: scanAndInject,
+    injectDetailAge: injectDetailAge,
     removeAll: removeAll,
     showNotice: showNotice,
     clearNotice: clearNotice,
