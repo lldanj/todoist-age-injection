@@ -161,7 +161,7 @@
   function makeLabel(doc, desc) {
     const span = doc.createElement("span");
     span.className = LABEL_CLASS;
-    span.textContent = desc.label;
+    span.textContent = "Task age: " + desc.label;
     span.setAttribute("title", desc.tooltip);
     span.setAttribute("aria-label", desc.tooltip);
     return span;

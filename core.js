@@ -61,12 +61,11 @@
     const dateStr = isNaN(created.getTime())
       ? "unknown date"
       : created.toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "short",
+          month: "numeric",
           day: "numeric",
+          year: "numeric",
         });
-    const dayWord = days === 1 ? "day" : "days";
-    return "Created " + days + " " + dayWord + " ago (" + dateStr + ")";
+    return "Created on " + dateStr;
   }
 
   /**
