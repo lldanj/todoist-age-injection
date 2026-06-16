@@ -234,58 +234,46 @@
   }
 
   /**
-   * Find the task-detail panel node and the task ID being viewed.
+   * Find the task-detail panel node using only DOM structure — no URL needed.
    *
-   * Primary: look for a [data-item-id] element that is NOT a plain list row
-   * (i.e. not inside an <li> or [role="listitem"]).  This covers Todoist's
-   * right-side detail panel which carries the same attribute.
-   * Fallback: try known data-testid values for the detail panel.
+   * Todoist renders a metadata sidebar (Goal, Project, Date, Labels…) that
+   * carries the same data-item-id as the task but is NOT inside a list row.
+   * We collect every such element and prefer the one that contains the
+   * task-info-tags anchor (the Labels row), which reliably identifies the
+   * properties sidebar.
    *
    * @param {Document} doc
-   * @param {object} opts  – must contain opts.href (current window.location.href)
    * @returns {{node:Element, id:string}|null}
    */
-  function findDetailNode(doc, opts) {
-    const core = getCore(typeof self !== "undefined" ? self : this);
-    const href = (opts && opts.href) || "";
-    const id = core.extractIdFromHref(href);
-    if (!id) return null;
-
-    // A. data-item-id match that is NOT a plain list row.
-    const candidates = doc.querySelectorAll('[data-item-id="' + id + '"]');
-    for (const el of candidates) {
+  function findDetailNode(doc) {
+    const candidates = [];
+    const allNodes = doc.querySelectorAll("[data-item-id]");
+    for (const el of allNodes) {
       if (!el.closest("li") && !el.closest('[role="listitem"]')) {
-        return { node: el, id: id };
+        candidates.push(el);
+      }
+    }
+    if (candidates.length === 0) return null;
+
+    // Prefer the element that contains task-info-tags (the properties sidebar).
+    for (const el of candidates) {
+      if (el.querySelector('[data-testid="task-info-tags"]')) {
+        return { node: el, id: String(el.getAttribute("data-item-id")) };
       }
     }
 
-    // B. Known data-testid patterns Todoist uses for the detail panel.
-    const testIds = ["task-detail", "task-detail-content", "task-details", "detail-panel"];
-    for (const tid of testIds) {
-      const el = doc.querySelector('[data-testid="' + tid + '"]');
-      if (el) return { node: el, id: id };
-    }
-
-    return null;
+    // Fall back: last candidate in DOM order (sidebar typically follows content).
+    const last = candidates[candidates.length - 1];
+    return { node: last, id: String(last.getAttribute("data-item-id")) };
   }
 
   /**
-   * Pick where inside the detail panel to place the age row.
-   * Mirrors the list-view strategy: prefer the info-tags element, then fall
-   * back to the first non-list child, then the container itself.
+   * Append to the container itself so the label lands after all metadata rows
+   * (Date, Priority, Labels, Location, etc.).
    * @param {Element} node
    * @returns {Element}
    */
   function pickDetailTarget(node) {
-    const infoTags = node.querySelector('[data-testid="task-info-tags"]');
-    if (infoTags) return infoTags;
-
-    for (const child of node.children) {
-      const tag = child.tagName && child.tagName.toLowerCase();
-      if (tag === "ul" || tag === "ol") continue;
-      if (child.querySelector && child.querySelector("[data-item-id]")) continue;
-      return child;
-    }
     return node;
   }
 
@@ -306,8 +294,9 @@
    */
   function injectDetailAge(doc, cache, opts) {
     const core = getCore(typeof self !== "undefined" ? self : this);
-    const href = (opts && opts.href) || "";
-    const id = core.extractIdFromHref(href);
+
+    const info = findDetailNode(doc);
+    const id = info && info.id;
 
     // Remove a stale label left over from a previous task view.
     const existing = doc.querySelector("." + DETAIL_LABEL_CLASS);
@@ -316,11 +305,8 @@
       existing.parentNode && existing.parentNode.removeChild(existing);
     }
 
-    if (!id) return "no-id";
-    if (core.isPlaceholderId(id)) return "placeholder";
-
-    const info = findDetailNode(doc, opts);
     if (!info) return "no-panel";
+    if (!id || core.isPlaceholderId(id)) return "placeholder";
 
     const desc = core.describeTask(cache, id, opts && opts.now);
     if (!desc) return "no-cache";
