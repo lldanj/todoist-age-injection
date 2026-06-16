@@ -1,6 +1,6 @@
 # todoist-age-injection
 
-A Chrome/Brave (Manifest V3) extension that adds a small **`Nd`** readout next to
+A Chrome/Brave (Manifest V3) extension that adds task age (**x days**) for
 each task in the Todoist web app, showing how many whole days ago the task was
 created. Built strictly to the project PRD.
 
